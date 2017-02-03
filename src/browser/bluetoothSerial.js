@@ -27,14 +27,9 @@
 // }
 // bluetoothSerial.register(echoProxy);
 
+
+
 module.exports = (function() {
-
-    // ipc handling for electron
-    var ipc;
-    if (window.require('electron')) {
-        ipc = window.require('electron').ipcRenderer;
-    }
-
     var connected = false;
     var enabled = true;
     var buf = {
@@ -48,6 +43,15 @@ module.exports = (function() {
     var process_cb;
 
 
+    // ipc handling for electron
+    var ipc;
+    if (window.require('electron')) {
+        ipc = window.require('electron').ipcRenderer;
+        ipc.send('bl~subscribe');
+        ipc.on('bl~data', function(data) {
+            buf.output = data;
+        });
+    }
 
 
     var btlog = function(str) {
@@ -74,6 +78,16 @@ module.exports = (function() {
 
         connect: function(mac, success_cb, fail_cb) {
             btlog("bluetoothSerial.connect: " + mac);
+            // connect through ipc
+            if (ipc) {
+                ipc.once("bl~connected", function() {
+                    connected = true;
+                    if (success_cb) success_cb();
+                });
+                ipc.send("bl~connect", mac);
+                return;
+            }
+
             connected = true;
             if (success_cb) {
                 success_cb();
@@ -85,6 +99,17 @@ module.exports = (function() {
         },
         disconnect: function(success_cb, fail_cb) {
             btlog("bluetoothSerial.disconnect");
+
+            // connect through ipc
+            if (ipc) {
+                ipc.once("bl~disconnected", function() {
+                    connected = false;
+                    if (success_cb) success_cb();
+                });
+                ipc.send("bl~disconnect");
+                return;
+            }
+
             connected = false;
             window.clearInterval(interval);
             if (success_cb) {
@@ -94,6 +119,11 @@ module.exports = (function() {
         write: function(data, success_cb, fail_cb) {
             btlog("bluetoothSerial.write: " + data);
             buf.input += data;
+
+            if (ipc) {
+                ipc.send("bl~write", data);
+            }
+
             if (success_cb) {
                 success_cb();
             }
@@ -163,7 +193,7 @@ module.exports = (function() {
             }];
 
             if (ipc) {
-                ipc.on("bl~devices", function(event, data) {
+                ipc.once("bl~devices", function(event, data) {
                     devices = [];
                     data.forEach(function(item) {
                         devices.push({
