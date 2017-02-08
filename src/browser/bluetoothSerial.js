@@ -56,7 +56,7 @@ module.exports = (function() {
 
     var btlog = function(str) {
         console.log(str);
-    }
+    };
 
     var timer_cb = function() {
         if (process_cb) {
@@ -76,15 +76,20 @@ module.exports = (function() {
     return {
 
 
-        connect: function(mac, success_cb, fail_cb) {
-            btlog("bluetoothSerial.connect: " + mac);
+        connect: function(device, success_cb, fail_cb) {
+            btlog("bluetoothSerial.connect: " + device.address);
             // connect through ipc
             if (ipc) {
-                ipc.once("bl~connected", function() {
+                ipc.once("bl~connected", function(err) {
+                    if (err) {
+                        connected = false;
+                        fail_cb(err);
+                        return;
+                    }
                     connected = true;
                     if (success_cb) success_cb();
                 });
-                ipc.send("bl~connect", mac);
+                ipc.send("bl~connect", device);
                 return;
             }
 
@@ -193,14 +198,9 @@ module.exports = (function() {
             }];
 
             if (ipc) {
+                devices = [];
                 ipc.once("bl~devices", function(event, data) {
-                    devices = [];
-                    data.forEach(function(item) {
-                        devices.push({
-                            "id": item.address,
-                            "name": item.name
-                        });
-                    });
+                    devices = data;
                     success_cb(devices);
                 });
                 ipc.send("bl~list");
@@ -222,7 +222,6 @@ module.exports = (function() {
         isEnabled: function(success_cb, fail_cb) {
             btlog("bluetoothSerial.isEnabled: " + enabled);
             if (enabled) {
-
                 if (success_cb) {
                     success_cb();
                 }

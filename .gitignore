@@ -1,1 +1,4 @@
 *.DS_Store
+examples/**/platforms
+examples/**/plugins
+**/node_modules
