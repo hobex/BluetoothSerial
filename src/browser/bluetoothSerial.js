@@ -126,11 +126,19 @@ module.exports = (function() {
             buf.input += data;
 
             if (ipc) {
+                ipc.once("bl~written", function(event, err) {
+                    btlog("written");
+                    if (err) {
+                        if (fail_cb) {
+                            fail_cb(err);
+                        }
+                    } else {
+                        if (success_cb) {
+                            success_cb();
+                        }
+                    }
+                });
                 ipc.send("bl~write", data);
-            }
-
-            if (success_cb) {
-                success_cb();
             }
         },
         available: function(success_cb, fail_cb) {
