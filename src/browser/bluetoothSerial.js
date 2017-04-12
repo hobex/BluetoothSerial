@@ -48,7 +48,7 @@ module.exports = (function() {
     if (window.require('electron')) {
         ipc = window.require('electron').ipcRenderer;
         ipc.send('bl~subscribe');
-        ipc.on('bl~data', function(data) {
+        ipc.on('bl~data', function(event, data) {
             buf.output = data;
         });
     }
@@ -80,7 +80,7 @@ module.exports = (function() {
             btlog("bluetoothSerial.connect: " + device.address);
             // connect through ipc
             if (ipc) {
-                ipc.once("bl~connected", function(err) {
+                ipc.once("bl~connected", function(event, err) {
                     if (err) {
                         connected = false;
                         fail_cb(err);
