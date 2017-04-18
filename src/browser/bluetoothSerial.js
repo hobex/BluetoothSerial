@@ -47,14 +47,18 @@ cordova.define("cordova-plugin-bluetooth-serial.BluetoothSerial_browser", functi
         var ipc;
         if (window.require('electron')) {
             ipc = window.require('electron').ipcRenderer;
-            ipc.send('bl~subscribe');
             ipc.on('bl~data', function(event, data) {
                 buf.output = data;
                 if (subscribe_cb) {
                     subscribe_cb(data);
                 }
+            });
+            ipc.on('bl~data_raw', function(event, data) {
+                buf.output = data;
                 if (raw_cb) {
-                    raw_cb(data);
+                    console.log("raw_cb");
+                    console.log(data);
+                    raw_cb(stringToArrayBuffer(data));
                 }
             });
         }
@@ -170,22 +174,28 @@ cordova.define("cordova-plugin-bluetooth-serial.BluetoothSerial_browser", functi
             },
             subscribe: function(delimiter, success_cb, fail_cb) {
                 btlog("bluetoothSerial.subscribe '" + delimiter + "'");
+                ipc.send('bl~subscribe');
                 subscribe_cb = success_cb;
                 subscribe_delim = delimiter;
             },
             unsubscribe: function(success_cb, fail_cb) {
                 btlog("bluetoothSerial.unsubscribe");
+                ipc.send('bl~unsubscribe');
                 subscribe_delim = false;
+                subscribe_cb = false;
                 if (success_cb) {
                     success_cb();
                 }
             },
             subscribeRawData: function(success_cb, fail_cb) {
                 btlog("bluetoothSerial.subscribeRawData");
+                ipc.send('bl~subscribe_raw');
                 raw_cb = success_cb;
             },
             unsubscribeRawData: function(success_cb, fail_cb) {
                 btlog("bluetoothSerial.unsubscribeRawData");
+                ipc.send('bl~unsubscribe_raw');
+
                 raw_cb = false;
                 if (success_cb) {
                     success_cb();
@@ -265,3 +275,11 @@ cordova.define("cordova-plugin-bluetooth-serial.BluetoothSerial_browser", functi
     })();
 
 });
+
+var stringToArrayBuffer = function(str) {
+    var ret = new Uint8Array(str.length);
+    for (var i = 0; i < str.length; i++) {
+        ret[i] = str.charCodeAt(i);
+    }
+    return ret.buffer;
+};
