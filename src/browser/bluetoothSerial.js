@@ -1,4 +1,3 @@
-cordova.define("cordova-plugin-bluetooth-serial.BluetoothSerial_browser", function(require, exports, module) { // This implementation is for testing in the brower. Future implemetations *might* be able to use
     // Chrome Bluetooth APIs https://developer.chrome.com/apps/bluetooth or Web Bluetooth.
 
     // Code from PhracturedBlue https://github.com/don/BluetoothSerial/issues/115
@@ -274,12 +273,10 @@ cordova.define("cordova-plugin-bluetooth-serial.BluetoothSerial_browser", functi
         };
     })();
 
-});
-
-var stringToArrayBuffer = function(str) {
-    var ret = new Uint8Array(str.length);
-    for (var i = 0; i < str.length; i++) {
-        ret[i] = str.charCodeAt(i);
-    }
-    return ret.buffer;
-};
+    var stringToArrayBuffer = function(str) {
+        var ret = new Uint8Array(str.length);
+        for (var i = 0; i < str.length; i++) {
+            ret[i] = str.charCodeAt(i);
+        }
+        return ret.buffer;
+    };
