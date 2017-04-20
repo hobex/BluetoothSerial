@@ -47,13 +47,13 @@
         if (window.require('electron')) {
             ipc = window.require('electron').ipcRenderer;
             ipc.on('bl~data', function(event, data) {
-                buf.output = data;
+                buf.output += data;
                 if (subscribe_cb) {
                     subscribe_cb(data);
                 }
             });
             ipc.on('bl~data_raw', function(event, data) {
-                buf.output = data;
+                buf.output += data;
                 if (raw_cb) {
                     console.log("raw_cb");
                     console.log(data);
@@ -132,8 +132,6 @@
             },
             write: function(data, success_cb, fail_cb) {
                 btlog("bluetoothSerial.write: " + data);
-                buf.input += data;
-
                 if (ipc) {
                     ipc.once("bl~written", function(event, err) {
                         btlog("written");
@@ -202,6 +200,9 @@
             },
             clear: function(success_cb, fail_cb) {
                 btlog("bluetoothSerial.clear");
+                if (ipc) {
+                    ipc.send('bl~clear');
+                }
                 buf.output = "";
                 if (success_cb) {
                     success_cb();
